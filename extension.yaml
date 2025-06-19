@@ -1,0 +1,149 @@
+name: firestore-scheduled-reset
+version: 0.1.0
+specVersion: v1beta
+
+displayName: Scheduled Firestore Reset
+description: Automatically reset Firestore collections or documents to a default state at scheduled intervals using Cloud Scheduler.
+
+license: Apache-2.0
+author:
+  authorName: Firebase
+  url: https://firebase.google.com
+
+sourceUrl: https://github.com/firebase/extensions/tree/master/firestore-scheduled-reset
+releaseNotesUrl: https://github.com/firebase/extensions/blob/master/firestore-scheduled-reset/CHANGELOG.md
+
+icon: icon.png
+
+readme: README.md
+preinstallContent: PREINSTALL.md
+postinstallContent: POSTINSTALL.md
+
+billingRequired: true
+
+apis:
+  - apiName: cloudscheduler.googleapis.com
+    reason: Triggers the function that resets Firestore data on a schedule
+
+roles:
+  - role: datastore.user
+    reason: Allows the extension to read and write to your Cloud Firestore database
+  - role: cloudscheduler.jobRunner
+    reason: Runs the Cloud Scheduler job that triggers data reset on schedule
+  - role: storage.objectViewer
+    reason: Allows reading default values from Cloud Storage (if GCS URL is provided)
+
+resources:
+  - name: scheduledReset
+    type: firebaseextensions.v1beta.function
+    description: >-
+      Scheduled Cloud Function that resets Firestore collections or documents to default values.
+    properties:
+      schedule: ${SCHEDULE}
+      location: ${LOCATION}
+      runtime: nodejs16
+      timeout: 540s
+      memory: 256MB
+      eventTrigger:
+        eventType: providers/cloud.pubsub/eventTypes/topic.publish
+        resource: projects/${PROJECT_ID}/topics/${SCHEDULER_TOPIC}
+
+  - name: manualReset
+    type: firebaseextensions.v1beta.function
+    description: >-
+      HTTP callable function that allows manual triggering of reset operations.
+    properties:
+      location: ${LOCATION}
+      runtime: nodejs16
+      timeout: 540s
+      memory: 256MB
+      httpsTrigger: {}
+
+params:
+  - param: LOCATION
+    label: Cloud Functions location
+    description: >-
+      Where do you want to deploy the functions created for this extension?
+      For help selecting a location, refer to the [location selection
+      guide](https://firebase.google.com/docs/functions/locations).
+    type: select
+    options:
+      - label: Iowa (us-central1)
+        value: us-central1
+      - label: South Carolina (us-east1)
+        value: us-east1
+      - label: Northern Virginia (us-east4)
+        value: us-east4
+      - label: Los Angeles (us-west2)
+        value: us-west2
+      - label: Belgium (europe-west1)
+        value: europe-west1
+      - label: London (europe-west2)
+        value: europe-west2
+      - label: Frankfurt (europe-west3)
+        value: europe-west3
+      - label: Taiwan (asia-east1)
+        value: asia-east1
+      - label: Tokyo (asia-northeast1)
+        value: asia-northeast1
+      - label: Mumbai (asia-south1)
+        value: asia-south1
+      - label: Sydney (australia-southeast1)
+        value: australia-southeast1
+    default: us-central1
+    required: true
+    immutable: true
+
+  - param: RESET_TARGET
+    label: Firestore Path to Reset
+    description: >-
+      Specify the Firestore path to a document or collection that will be reset
+      (e.g., 'forms/current' for a document or 'leaderboards' for a collection)
+    type: string
+    required: true
+
+  - param: RESET_TYPE
+    label: Reset Type
+    description: >-
+      Specify whether the target is a document or collection
+    type: select
+    options:
+      - label: Document
+        value: document
+      - label: Collection
+        value: collection
+    required: true
+    default: document
+
+  - param: DEFAULT_VALUES
+    label: Default Values
+    description: >-
+      Specify the default values as a JSON string or a GCS URL (gs://bucket/path/to/file.json).
+      For documents, provide an object. For collections, provide either an array of objects or an
+      object where keys are document IDs and values are document data.
+    type: string
+    required: true
+    example: '{"message": "Form reset!","status": "available"}' 
+
+  - param: SCHEDULE
+    label: Reset Schedule
+    description: >-
+      How often should the reset happen? Specify a cron schedule expression.
+      Default is daily at midnight (UTC): '0 0 * * *'
+      See https://cloud.google.com/scheduler/docs/configuring/cron-job-schedules for format.
+    type: string
+    default: "0 0 * * *"
+    example: "0 0 * * *"
+    validationRegex: ^(\S+\s+){4}\S+$
+    validationErrorMessage: Must be a valid cron schedule expression with 5 fields.
+    required: true
+
+  - param: SCHEDULER_TOPIC
+    label: Pub/Sub Topic Name
+    description: >-
+      The name of the Pub/Sub topic to create for Cloud Scheduler to trigger the reset function.
+    type: string
+    default: "firestore-scheduled-reset"
+    validationRegex: ^[a-zA-Z0-9-_.~%+]+$
+    validationErrorMessage: Topic names must only contain letters, numbers, dashes, underscores, periods, tildes, percent signs, or plus signs.
+    required: true

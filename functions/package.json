@@ -1,0 +1,37 @@
+{
+  "name": "firebase-firestore-scheduled-reset",
+  "version": "0.1.0",
+  "description": "Cloud functions for resetting Firestore collections or documents on a schedule",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "lint": "eslint \"src/**/*\"",
+    "lint:fix": "eslint \"src/**/*\" --fix",
+    "test": "jest",
+    "generate-readme": "firebase ext:info .. --markdown > ../README.md"
+  },
+  "engines": {
+    "node": "16"
+  },
+  "author": "Firebase",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "firebase-admin": "^11.9.0",
+    "firebase-functions": "^4.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6",
+    "@types/jest": "^29.5.2",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.44.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.1"
+  },
+  "private": true
+}
